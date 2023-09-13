@@ -23,7 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.GetProducts, name='base_url'),
     path('products/<int:id>/', views.GetProduct, name='product_url'),
-    path('filter', views.filter),
+    path('filter', views.GetFilteredProducts),
     path('products/<str:engName>/', views.GetType, name='type_url'),
-    path('products/<str:engName>/filter', views.filter),
+    path('products/<str:engName>/filter', views.GetFilteredProducts),
 ]

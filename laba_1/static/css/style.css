@@ -82,12 +82,13 @@ body {
 
 #box {
     display: flex;
-    width: auto;
-    height: auto;
+    flex-wrap: wrap;
+    width: 1100px;
+    height: max-content;
     position: absolute;
     left: 375px;
     top: 200px;
-    border-spacing: 40px 30px;
+    padding-bottom: 30px;
 }
 
 .card {
@@ -95,6 +96,8 @@ body {
     height: 450px;
     border: groove 1px rgb(216, 216, 216);
     text-align: center;
+    margin-left: 40px;
+    margin-top: 30px;
 }
 
 .card-image-wrap {
