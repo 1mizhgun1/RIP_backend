@@ -5,12 +5,14 @@ from .models import Product
 from .data_processing.get_data import *
 from .data_processing.filter_data import *
 
+from django.db import connection
+
 def GetProducts(request):
     productList = Product.objects.all()
     return render(request, 'products.html', {
         'data': {
             'products': productList,
-            'types': getTypes(),
+            'types': TYPES,
             'prices': getPrices(productList)
         }
     })
@@ -21,7 +23,7 @@ def GetProduct(request, id):
         'data' : {
             'id': id,
             'product': product,
-            'types': getTypes(),
+            'types': TYPES,
             'params': getParams(product)
         }
     })
@@ -58,3 +60,18 @@ def GetFilteredProducts(request, engName='ALL'):
         }
     })
 
+def DeleteFromProducts(request, engName='ALL'):
+    id = -1
+    if 'delete_card' in request.POST.keys():
+        id = request.POST['delete_card']
+    if id != -1:
+        with connection.cursor() as cursor:
+            cursor.execute('DELETE FROM laba_1_product WHERE id = ' + id)
+    productList = filterType(engName)
+    return render(request, 'products.html', {
+        'data': {
+            'products': productList,
+            'types': getTypes(engName),
+            'prices': getPrices(productList)
+        }
+    })

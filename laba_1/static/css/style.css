@@ -100,6 +100,26 @@ body {
     margin-top: 30px;
 }
 
+.card-delete-input {
+    display: none;
+}
+
+.card-delete-button {
+    margin-top: 15px;
+    padding: 6px;
+    background-color: #0B58CE;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.card-delete-button:hover {
+    background-color: #9fd122;
+}
+
 .card-image-wrap {
     position: relative;
     width: 300px;
@@ -110,7 +130,7 @@ body {
     scale: 60%;
     position: relative;
     left: -50%;
-    top: 50%;
+    top: 35%;
     transform: translate(42%, -75%);
 }
 
@@ -118,6 +138,7 @@ body {
     position: relative;
     width: 250px;
     height: 50px;
+    top: -55px;
     left: 50%;
     transform: translateX(-50%);
 }
@@ -142,6 +163,7 @@ body {
     font-size: 22px;
     font-weight: 300;
     left: 50%;
+    top: -55px;
     transform: translateX(-50%);
 }
 
@@ -153,6 +175,7 @@ body {
     padding: 6px;
     margin-top: -15px;
     left: 50%;
+    top: -55px;
     transform: translateX(-50%);
     text-transform: uppercase;
     font-weight: bold;

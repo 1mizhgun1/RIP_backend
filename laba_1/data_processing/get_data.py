@@ -4,11 +4,15 @@ from ..models import Product
 
 rusNames = {'frames': 'Оправы для очков', 'sunglasses': 'Солнцезащитные очки', 'lenses': 'Контактные линзы', 'param_sex': 'Пол', 'param_material': 'Материал', 'param_type': 'Тип', 'param_color': 'Цвет оправы', 'param_form': 'Форма', 'param_time': 'Частота замены', 'param_brand': 'Бренд'}
 
+def getTypeNames():
+    return Product.objects.values_list('type', flat=True).distinct()
+
+typeNames = getTypeNames()
+
 def getTypes(activeEngName='ALL'):
-    engNames = Product.objects.values_list('type', flat=True).distinct()
     types = []
     cnt = 0
-    for engName in engNames:
+    for engName in typeNames:
         cnt += 1
         types.append({
             'id': cnt,
@@ -17,6 +21,8 @@ def getTypes(activeEngName='ALL'):
             'active': engName == activeEngName
         })
     return types
+
+TYPES = getTypes()
 
 def getPrices(productList):
     if len(productList) == 0:

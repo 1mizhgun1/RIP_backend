@@ -26,4 +26,6 @@ urlpatterns = [
     path('filter', views.GetFilteredProducts),
     path('products/<str:engName>/', views.GetType, name='type_url'),
     path('products/<str:engName>/filter', views.GetFilteredProducts),
+    path('delete', views.DeleteFromProducts),
+    path('products/<str:engName>/delete', views.DeleteFromProducts)
 ]

@@ -48,6 +48,11 @@
     <div id="box">
     {% for product in data.products %}
         <div class="card">
+            <form action="delete" method="post">
+                {% csrf_token %}
+                <input class="card-delete-input" type="text" name="delete_card" value="{{product.id}}">
+                <input class="card-delete-button" type="submit" value="удалить">
+            </form>
             <div class="card-image-wrap"><a href="{% url 'product_url' product.id %}"><img src="{% static product.link %}" alt="картинка" class="card-image"></a></div>
             <div class="card-title-wrap"><a href="{% url 'product_url' product.id %}" class="card-title">{{ product.title }}</a></div>
             <h4 class="card-price">{{ product.price }} ₽</h4>
