@@ -8,7 +8,7 @@ from .data_processing.filter_data import *
 from django.db import connection
 
 def GetProducts(request):
-    productList = Product.objects.all()
+    productList = Product.objects.all().order_by('last_modified')
     return render(request, 'products.html', {
         'data': {
             'products': productList,
@@ -66,7 +66,7 @@ def DeleteFromProducts(request, engName='ALL'):
         id = request.POST['delete_card']
     if id != -1:
         with connection.cursor() as cursor:
-            cursor.execute('DELETE FROM laba_1_product WHERE id = ' + id)
+            cursor.execute("update laba_1_product set status = 'N' where id = " + id)
     productList = filterType(engName)
     return render(request, 'products.html', {
         'data': {

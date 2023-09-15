@@ -1,39 +1,45 @@
 from django.db import models
 
 class Product(models.Model):
-    title = models.CharField(max_length=50)
-    link = models.CharField(max_length=50)
-    price = models.IntegerField()
-    cnt = models.IntegerField()
-    status = models.CharField(max_length=20)
-    type = models.CharField(max_length=50)
-    param_sex = models.CharField(max_length=20)
-    param_material = models.CharField(max_length=20)
-    param_type = models.CharField(max_length=20)
-    param_color = models.CharField(max_length=20)
-    param_form = models.CharField(max_length=20)
-    param_time = models.CharField(max_length=20)
-    param_brand = models.CharField(max_length=50)
+    title = models.CharField(max_length=50, verbose_name="Название")
+    link = models.CharField(max_length=50, verbose_name="Ссылка на изображение")
+    price = models.IntegerField(verbose_name="Цена")
+    cnt = models.IntegerField(verbose_name="Количество на складе")
+    status = models.CharField(max_length=1, verbose_name="Статус активности") # A - active, N - non-active
+    type = models.CharField(max_length=20, verbose_name="Тип")
+    param_sex = models.CharField(max_length=10, verbose_name="Пол", null=True, blank=True)
+    param_material = models.CharField(max_length=20, verbose_name="Материал", null=True, blank=True)
+    param_type = models.CharField(max_length=20, verbose_name="Тип оправы", null=True, blank=True)
+    param_color = models.CharField(max_length=20, verbose_name="Цвет оправы", null=True, blank=True)
+    param_form = models.CharField(max_length=20, verbose_name="Форма", null=True, blank=True)
+    param_time = models.CharField(max_length=20, verbose_name="Частота замены", null=True, blank=True)
+    param_brand = models.CharField(max_length=50, verbose_name="Бренд")
+    last_modified = models.DateTimeField(auto_now=True, verbose_name="Последнее изменение", null=True, blank=True)
+
+# Детская оправа для очков Ciao-Ciao C-351
 
 class User(models.Model):
-    name = models.CharField(max_length=20)
-    login = models.CharField(max_length=20)
-    password = models.CharField(max_length=50)
+    name = models.CharField(max_length=20, verbose_name="Имя")
+    login = models.CharField(max_length=20, verbose_name="Логин")
+    password = models.CharField(max_length=50, verbose_name="Пароль")
 
 class Moderator(models.Model):
-    name = models.CharField(max_length=20)
-    login = models.CharField(max_length=20)
-    password = models.CharField(max_length=50)
+    name = models.CharField(max_length=20, verbose_name="Имя")
+    login = models.CharField(max_length=20, verbose_name="Логин")
+    password = models.CharField(max_length=50, verbose_name="Пароль")
     
 class Order(models.Model):
-    create = models.DateField()
-    send = models.DateField()
-    closed = models.DateField()
-    status = models.CharField(max_length=20)
-    user = models.ForeignKey(User, on_delete = models.CASCADE)
-    moderator = models.ForeignKey(Moderator, on_delete = models.CASCADE)
+    created = models.DateTimeField(auto_now=True, verbose_name="Создание")
+    send = models.DateTimeField(verbose_name="Отправка")
+    closed = models.DateTimeField(verbose_name="Закрытие")
+    status = models.CharField(max_length=20, verbose_name="Статус") # I - inputing, P - processing, D - deleted by user, A - success, W - fail
+    user = models.ForeignKey(User, on_delete = models.CASCADE, verbose_name="Пользователь")
+    moderator = models.ForeignKey(Moderator, on_delete = models.CASCADE, verbose_name="Модератор")
+
+# I-P-C
+#  \D\W 
 
 class OrdersProducts(models.Model):
-    product_cnt = models.IntegerField()
-    order = models.ForeignKey(Order, on_delete = models.CASCADE)
-    product = models.ForeignKey(Product, on_delete = models.CASCADE)
+    product_cnt = models.IntegerField(verbose_name="Количество данного товара в данном заказе")
+    order = models.ForeignKey(Order, on_delete = models.CASCADE, verbose_name="Заказ")
+    product = models.ForeignKey(Product, on_delete = models.CASCADE, verbose_name="Товар")

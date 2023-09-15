@@ -47,6 +47,7 @@
     </div>
     <div id="box">
     {% for product in data.products %}
+        {% if product.status == 'A' %}
         <div class="card">
             <form action="delete" method="post">
                 {% csrf_token %}
@@ -58,10 +59,11 @@
             <h4 class="card-price">{{ product.price }} ₽</h4>
             {% if product.cnt > 0 %}
                 <h4 class="card-status-green">в наличии</h4>
-            {% elif product.status == 0 %}
+            {% elif product.cnt == 0 %}
                 <h4 class="card-status-red">раскупили</h4>
             {% endif %}
         </div>
+        {% endif %}
     {% endfor %}
     </div>
 {% endblock %}
