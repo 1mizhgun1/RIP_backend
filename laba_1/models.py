@@ -16,8 +16,6 @@ class Product(models.Model):
     param_brand = models.CharField(max_length=50, verbose_name="Бренд")
     last_modified = models.DateTimeField(auto_now=True, verbose_name="Последнее изменение", null=True, blank=True)
 
-# Детская оправа для очков Ciao-Ciao C-351
-
 class User(models.Model):
     name = models.CharField(max_length=20, verbose_name="Имя")
     login = models.CharField(max_length=20, verbose_name="Логин")
@@ -30,9 +28,9 @@ class Moderator(models.Model):
     
 class Order(models.Model):
     created = models.DateTimeField(auto_now=True, verbose_name="Создание")
-    send = models.DateTimeField(verbose_name="Отправка")
-    closed = models.DateTimeField(verbose_name="Закрытие")
-    status = models.CharField(max_length=20, verbose_name="Статус") # I - inputing, P - processing, D - deleted by user, A - success, W - fail
+    send = models.DateTimeField(verbose_name="Отправка", null=True, blank=True)
+    closed = models.DateTimeField(verbose_name="Закрытие", null=True, blank=True)
+    status = models.CharField(max_length=1, verbose_name="Статус") # I - inputing, P - processing, D - deleted by user, A - success, W - fail
     user = models.ForeignKey(User, on_delete = models.CASCADE, verbose_name="Пользователь")
     moderator = models.ForeignKey(Moderator, on_delete = models.CASCADE, verbose_name="Модератор")
 

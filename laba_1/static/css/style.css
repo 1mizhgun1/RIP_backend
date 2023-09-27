@@ -351,7 +351,7 @@ body {
     letter-spacing: 1px;
 }
 
-.product-to-cart {
+.product-to-cart-green {
     position: relative;
     top: 30px;
     left: 50%;
@@ -367,8 +367,22 @@ body {
     cursor: pointer;
 }
 
-.product-to-cart:hover {
+.product-to-cart-green:hover {
     background-color: #9fd122;
+}
+
+.product-to-cart-grey {
+    position: relative;
+    top: 30px;
+    left: 33%;
+    transform: translateX(-50%);
+    width: 350px;
+    padding: 7px;
+    font-size: 28px;
+    font-weight: 300;
+    background-color: rgb(152, 152, 152);
+    border: none;
+    border-radius: 10px;
 }
 
 #filter {
