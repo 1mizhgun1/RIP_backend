@@ -1,9 +1,9 @@
-from ..models import Product
+from ..models import OpticItem
 
 def filterType(engName):
     if engName == 'ALL':
-        return Product.objects.all()
-    return Product.objects.filter(type=engName)
+        return OpticItem.objects.all().filter(status='A')
+    return OpticItem.objects.filter(type=engName).filter(status='A')
 
 
 def filterPrice(productList, priceMin, priceMax):

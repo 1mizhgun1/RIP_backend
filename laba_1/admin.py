@@ -2,8 +2,7 @@ from django.contrib import admin
 
 from .models import *
 
-admin.site.register(Product)
+admin.site.register(OpticItem)
 admin.site.register(User)
-admin.site.register(Moderator)
-admin.site.register(Order)
-admin.site.register(OrdersProducts)
+admin.site.register(OpticOrder)
+admin.site.register(OrdersItems)

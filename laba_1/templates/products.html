@@ -47,7 +47,6 @@
     </div>
     <div id="box">
     {% for product in data.products %}
-        {% if product.status == 'A' %}
         <div class="card">
             <form action="delete" method="post">
                 {% csrf_token %}
@@ -63,7 +62,6 @@
                 <h4 class="card-status-red">раскупили</h4>
             {% endif %}
         </div>
-        {% endif %}
     {% endfor %}
     </div>
 {% endblock %}

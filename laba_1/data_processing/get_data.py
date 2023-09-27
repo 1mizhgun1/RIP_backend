@@ -1,11 +1,11 @@
 from django.db.models import Min, Max
 
-from ..models import Product
+from ..models import OpticItem
 
 rusNames = {'frames': 'Оправы для очков', 'sunglasses': 'Солнцезащитные очки', 'lenses': 'Контактные линзы', 'param_sex': 'Пол', 'param_material': 'Материал', 'param_type': 'Тип', 'param_color': 'Цвет оправы', 'param_form': 'Форма', 'param_time': 'Частота замены', 'param_brand': 'Бренд'}
 
 def getTypeNames():
-    return Product.objects.values_list('type', flat=True).distinct()
+    return OpticItem.objects.values_list('type', flat=True).distinct()
 
 typeNames = getTypeNames()
 

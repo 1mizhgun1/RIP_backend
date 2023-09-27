@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from .models import Product
+from .models import OpticItem
 
 from .data_processing.get_data import *
 from .data_processing.filter_data import *
@@ -8,7 +8,7 @@ from .data_processing.filter_data import *
 from django.db import connection
 
 def GetProducts(request):
-    productList = Product.objects.all().order_by('last_modified')
+    productList = OpticItem.objects.all().filter(status='A').order_by('last_modified')
     return render(request, 'products.html', {
         'data': {
             'products': productList,
@@ -18,7 +18,7 @@ def GetProducts(request):
     })
 
 def GetProduct(request, id):
-    product = Product.objects.get(pk=id)
+    product = OpticItem.objects.get(pk=id)
     return render(request, 'product.html', {
         'data' : {
             'id': id,
@@ -66,7 +66,7 @@ def DeleteFromProducts(request, engName='ALL'):
         id = request.POST['delete_card']
     if id != -1:
         with connection.cursor() as cursor:
-            cursor.execute("update laba_1_product set status = 'N' where id = " + id)
+            cursor.execute("update laba_1_opticitem set status = 'N' where id = " + id)
     productList = filterType(engName)
     return render(request, 'products.html', {
         'data': {
