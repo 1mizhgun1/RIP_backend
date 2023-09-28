@@ -1,13 +1,13 @@
-from django.db.models import Min, Max
-
-from ..models import OpticItem
+import requests
 
 rusNames = {'frames': 'Оправы для очков', 'sunglasses': 'Солнцезащитные очки', 'lenses': 'Контактные линзы', 'param_sex': 'Пол', 'param_material': 'Материал', 'param_type': 'Тип', 'param_color': 'Цвет оправы', 'param_form': 'Форма', 'param_time': 'Частота замены', 'param_brand': 'Бренд'}
 
 def getTypeNames():
-    return OpticItem.objects.values_list('type', flat=True).distinct()
+    return ['frames', 'sunglasses', 'lenses']
 
 typeNames = getTypeNames()
+
+URL = 'http://127.0.0.1:8080/'
 
 def getTypes(activeEngName='ALL'):
     types = []
@@ -24,16 +24,15 @@ def getTypes(activeEngName='ALL'):
 
 TYPES = getTypes()
 
-def getPrices(productList):
-    if len(productList) == 0:
-        return {
-            'priceMin': 0,
-            'priceMax': 0,
-            'priceMinAbsolute': 0,
-            'priceMaxAbsolute': 0
-        }
-    priceMinAbsolute = productList.aggregate(Min('price'))['price__min']
-    priceMaxAbsolute = productList.aggregate(Max('price'))['price__max']
+def getPrices(engName='ALL'):
+    if engName == 'ALL':
+        prices = requests.get(URL + f'prices/?format=json').json()
+    else:
+        prices = requests.get(URL + f'prices/?format=json&type={engName}').json()
+    priceMinAbsolute = prices['price_min']
+    priceMaxAbsolute = prices['price_max']
+    if priceMaxAbsolute == 10 ** 10:
+        priceMaxAbsolute = 0
     return {
         'priceMin': priceMinAbsolute,
         'priceMax': priceMaxAbsolute,
@@ -43,11 +42,10 @@ def getPrices(productList):
 
 def getParams(product):
     params = []
-    props = product.__dict__
-    for key in props.keys():
-        if key.startswith('param_') and props[key] != 'NULL':
+    for key in product.keys():
+        if key.startswith('param_') and product[key] != 'NULL':
             params.append({
                 'key': rusNames[key],
-                'value': props[key]
+                'value': product[key]
             })
     return params

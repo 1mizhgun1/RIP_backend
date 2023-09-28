@@ -1,10 +1,8 @@
-from ..models import OpticItem
+from .get_data import URL
+
+import requests
 
 def filterType(engName):
     if engName == 'ALL':
-        return OpticItem.objects.all().filter(status='A')
-    return OpticItem.objects.filter(type=engName).filter(status='A')
-
-
-def filterPrice(productList, priceMin, priceMax):
-    return productList.filter(price__range=[priceMin, priceMax])
+        return requests.get(URL + 'products/?status=A').json()
+    return requests.get(URL + f'products/?type={engName}&status=A').json()
