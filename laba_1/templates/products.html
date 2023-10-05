@@ -48,12 +48,12 @@
     <div id="box">
     {% for product in data.products %}
         <div class="card">
-            <div class="card-image-wrap"><a href="{% url 'product_url' product.pk %}"><img src="{% static product.link %}" alt="картинка" class="card-image"></a></div>
-            <div class="card-title-wrap"><a href="{% url 'product_url' product.pk %}" class="card-title">{{ product.title }}</a></div>
+            <div class="card-image-wrap"><a href="{% url 'product_url' product.id %}"><img src="{% static product.link %}" alt="картинка" class="card-image"></a></div>
+            <div class="card-title-wrap"><a href="{% url 'product_url' product.id %}" class="card-title">{{ product.title }}</a></div>
             <h4 class="card-price">{{ product.price }} ₽</h4>
-            {% if product.cnt > 0 %}
+            {% if product.cnt != '0' %}
                 <h4 class="card-status-green">в наличии</h4>
-            {% elif product.cnt == 0 %}
+            {% else %}
                 <h4 class="card-status-red">раскупили</h4>
             {% endif %}
         </div>

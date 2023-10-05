@@ -26,9 +26,9 @@ TYPES = getTypes()
 
 def getPrices(engName='ALL'):
     if engName == 'ALL':
-        prices = requests.get(URL + f'prices/?format=json').json()
+        prices = requests.get(URL + f'prices/?format=json&status=A').json()
     else:
-        prices = requests.get(URL + f'prices/?format=json&type={engName}').json()
+        prices = requests.get(URL + f'prices/?format=json&status=A&type={engName}').json()
     priceMinAbsolute = prices['price_min']
     priceMaxAbsolute = prices['price_max']
     if priceMaxAbsolute == 10 ** 10:

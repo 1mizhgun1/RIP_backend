@@ -47,7 +47,10 @@ def GetFilteredProducts(request, engName='ALL'):
         priceMax = prices['priceMaxAbsolute']
     prices['priceMin'] = priceMin
     prices['priceMax'] = priceMax
-    productList = requests.get(URL + f'products/?status=A&type={engName}&price_min={priceMin}&price_max={priceMax}').json()
+    if engName == 'ALL':
+        productList = requests.get(URL + f'products/?status=A&price_min={priceMin}&price_max={priceMax}').json()
+    else:
+        productList = requests.get(URL + f'products/?status=A&type={engName}&price_min={priceMin}&price_max={priceMax}').json()
     return render(request, 'products.html', {
         'data': {
             'products': productList,
