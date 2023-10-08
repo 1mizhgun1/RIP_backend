@@ -26,7 +26,7 @@
     <div class="product">
         <div class="product-info">
             <h4 class="product-title">{{ data.product.title }}</h4>
-            <div class="product-image-wrap"><img src="{% static data.product.link %}" alt="картинка" class="product-image"></div>
+            <div class="product-image-wrap"><img src="data:image/jpeg;base64,{{ data.product.image }}" alt="картинка" class="product-image"></div>
             <input type="radio" name="radio" id="product-params" checked>
             <input type="radio" name="radio" id="product-reviews">
             <div class="product-bar">
