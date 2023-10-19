@@ -60,7 +60,7 @@
                 <h4 class="product-price-text">Цена:</h4>
                 <h4 class="product-price">{{ data.product.price }} ₽</h4>
             </div>
-            {% if data.product.cnt != '0' %}
+            {% if data.product.cnt != 0 %}
                 <button class="product-to-cart-green" type="button">В корзину</button>
             {% else %}
                 <span class="product-to-cart-grey">В корзину</span>

@@ -51,7 +51,7 @@
             <div class="card-image-wrap"><a href="{% url 'product_url' product.pk %}"><img src="data:image/jpeg;base64,{{ product.image }}" alt="картинка" class="card-image"></a></div>
             <div class="card-title-wrap"><a href="{% url 'product_url' product.pk %}" class="card-title">{{ product.title }}</a></div>
             <h4 class="card-price">{{ product.price }} ₽</h4>
-            {% if product.cnt != '0' %}
+            {% if product.cnt != 0 %}
                 <h4 class="card-status-green">в наличии</h4>
             {% else %}
                 <h4 class="card-status-red">раскупили</h4>
