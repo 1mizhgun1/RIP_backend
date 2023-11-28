@@ -37,57 +37,15 @@ body {
     text-decoration: none;
 }
 
-.head-bar {
-    display: flex;
-    position: absolute;
-    top: 100px;
-    width: 1521px;
-    height: 50px;
-    transform: translateX(-46px);
-}
-
-.head-bar-button-1,
-.head-bar-button-2,
-.head-bar-button-3,
-.head-bar-button-1-active,
-.head-bar-button-2-active,
-.head-bar-button-3-active {
-    position: relative;
-    left: 9px;
-    top: 15px;
-    transform: translateY(-30%);
-    padding-top: 15px;
-    width: 507px;
-    text-align: center;
-    color: white;
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: 300;
-}
-
-.head-bar-button-1,
-.head-bar-button-2,
-.head-bar-button-3 {
-    background-color: #0B58CE;
-}
-
-.head-bar-button-1:hover,
-.head-bar-button-2:hover,
-.head-bar-button-3:hover,
-.head-bar-button-1-active,
-.head-bar-button-2-active,
-.head-bar-button-3-active {
-    background-color: #9fd122;
-}
-
 #box {
     display: flex;
-    width: auto;
-    height: auto;
+    flex-wrap: wrap;
+    width: 1100px;
+    height: max-content;
     position: absolute;
     left: 375px;
-    top: 200px;
-    border-spacing: 40px 30px;
+    top: 120px;
+    padding-bottom: 30px;
 }
 
 .card {
@@ -95,6 +53,28 @@ body {
     height: 450px;
     border: groove 1px rgb(216, 216, 216);
     text-align: center;
+    margin-left: 40px;
+    margin-top: 30px;
+}
+
+.card-delete-input {
+    display: none;
+}
+
+.card-delete-button {
+    margin-top: 15px;
+    padding: 6px;
+    background-color: #0B58CE;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.card-delete-button:hover {
+    background-color: #9fd122;
 }
 
 .card-image-wrap {
@@ -107,7 +87,7 @@ body {
     scale: 60%;
     position: relative;
     left: -50%;
-    top: 50%;
+    top: 35%;
     transform: translate(42%, -75%);
 }
 
@@ -115,6 +95,7 @@ body {
     position: relative;
     width: 250px;
     height: 50px;
+    top: -55px;
     left: 50%;
     transform: translateX(-50%);
 }
@@ -139,6 +120,7 @@ body {
     font-size: 22px;
     font-weight: 300;
     left: 50%;
+    top: -55px;
     transform: translateX(-50%);
 }
 
@@ -150,6 +132,7 @@ body {
     padding: 6px;
     margin-top: -15px;
     left: 50%;
+    top: -55px;
     transform: translateX(-50%);
     text-transform: uppercase;
     font-weight: bold;
@@ -169,7 +152,7 @@ body {
     display: flex;
     width: 1500px;
     position: absolute;
-    top: 220px;
+    top: 120px;
 }
 
 .product-info {
@@ -325,7 +308,7 @@ body {
     letter-spacing: 1px;
 }
 
-.product-to-cart {
+.product-to-cart-green {
     position: relative;
     top: 30px;
     left: 50%;
@@ -341,14 +324,28 @@ body {
     cursor: pointer;
 }
 
-.product-to-cart:hover {
+.product-to-cart-green:hover {
     background-color: #9fd122;
+}
+
+.product-to-cart-grey {
+    position: relative;
+    top: 30px;
+    left: 33%;
+    transform: translateX(-50%);
+    width: 350px;
+    padding: 7px;
+    font-size: 28px;
+    font-weight: 300;
+    background-color: rgb(152, 152, 152);
+    border: none;
+    border-radius: 10px;
 }
 
 #filter {
     position: absolute;
     left: 30px;
-    top: 230px;
+    top: 150px;
     width: 300px;
     height: 185px;
     border: solid 1px #c1bdbd;
