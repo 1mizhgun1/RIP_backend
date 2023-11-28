@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class Laba1Config(AppConfig):
+class GlassesApiConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'laba_1'
+    name = 'glasses_api'
