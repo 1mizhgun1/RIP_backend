@@ -1,8 +1,6 @@
-# runserver
-start.bat
-
 # project config
-config.py
+postgres_config.py
+minio_config.py
 
 # migrations
 migrations/
