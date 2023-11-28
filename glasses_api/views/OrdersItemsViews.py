@@ -1,28 +1,42 @@
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from drf_yasg.utils import swagger_auto_schema
 
-from ..models import OpticItem, OpticOrder, OrdersItems, User
-from ..serializers import PositionSerializer
+import redis
+from BACKEND.settings import REDIS_HOST, REDIS_PORT
 
-from .UserData import getUserId
+from ..models import *
+from ..serializers import *
 
-@api_view(['Put', 'Delete'])
-def processLink(request, format=None):
+
+session_storage = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
+
+
+class Link_View(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     # изменение количества продукта в заказе
-    if request.method == 'PUT':
-        userId = getUserId()
+    # можно только если авторизован
+    @swagger_auto_schema(request_body=OrdersItemsSerializer)
+    def put(self, request, format=None):
+        try:
+            ssid = request.COOKIES["session_id"]
+        except:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
 
         try: 
-            cnt = request.data['cnt']
+            cnt = request.data['product_cnt']
             productId = request.data['product']
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if OpticItem.objects.get(pk=productId).cnt < cnt:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        links = OrdersItems.objects.filter(product=productId).filter(order=User.objects.get(pk=userId).active_order)
+        links = OrdersItems.objects.filter(product=productId).filter(order=User.objects.get(pk=currentUser.pk).active_order)
         if len(links) > 0:
             links[0].product_cnt = cnt
             links[0].save()
@@ -30,9 +44,15 @@ def processLink(request, format=None):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     
     # удаление продукта из заказа
-    elif request.method == 'DELETE':
-        userId = getUserId()
-        currentUser = User.objects.get(pk=userId)
+    # можно только если авторизован
+    @swagger_auto_schema(request_body=OrdersItemsSerializer)
+    def delete(self, request, format=None):
+        try:
+            ssid = request.COOKIES["session_id"]
+        except:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
 
         try: 
             productId = request.data['product']

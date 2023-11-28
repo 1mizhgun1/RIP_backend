@@ -1,3 +1,6 @@
+# images
+*.png
+
 # project config
 postgres_config.py
 minio_config.py

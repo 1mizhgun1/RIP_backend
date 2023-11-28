@@ -1,8 +1,9 @@
+from datetime import timedelta
 from minio import Minio
 from minio.error import S3Error
 from io import BytesIO
-from base64 import b64decode
-from datetime import timedelta
+from base64 import b64encode, b64decode
+import os
 
 from minio_config import *
 
@@ -49,6 +50,9 @@ class MinioClass:
 
     def getImage(self, username: str, image_id: int, image_extension: str):
         try:
+            # result = self.client.get_object(bucket_name=username,
+            #                                 object_name=f"{image_id}.{image_extension}")
+            # return b64encode(BytesIO(result.data).read()).decode()
             return self.client.get_presigned_url(
                 method='GET',
                 bucket_name=username,

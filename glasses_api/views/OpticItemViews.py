@@ -1,18 +1,23 @@
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view
-
-from ..models import OpticItem, OpticOrder, OrdersItems, User
-from ..serializers import OpticItemSerializer, OpticOrderSerializer, OrdersItemsSerializer
-from ..filters import filterProducts
-
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 
+import redis
+from BACKEND.settings import REDIS_HOST, REDIS_PORT
+
+from ..models import *
+from ..serializers import *
+from ..filters import filterProducts
+from ..permissions import *
 from glasses_api.minio.MinioClass import MinioClass
 
 import random
 
-from .UserData import getUserId
+
+session_storage = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
 
 
 # добавляет к сериализеру продукта поле image
@@ -22,10 +27,12 @@ def getProductDataWithImage(serializer: OpticOrderSerializer):
     productData['image'] = minio.getImage('products', serializer.data['pk'], serializer.data['file_extension'])
     return productData
 
+
 # выгружает картинку в minio из request
 def postProductImage(request, serializer: OpticOrderSerializer):
     minio = MinioClass()
     minio.addImage('products', serializer.data['pk'], request.data['image'], serializer.data['file_extension'])
+
 
 # изменяет картинку продукта в minio на переданную в request
 def putProductImage(request, serializer: OpticOrderSerializer):
@@ -34,42 +41,54 @@ def putProductImage(request, serializer: OpticOrderSerializer):
     minio.addImage('products', serializer.data['pk'], request.data['image'], serializer.data['file_extension'])
 
 
-@api_view(['Get', 'Post'])
-def processOpticItemList(request, format=None):
+class OpticItemList_View(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     # получение списка продуктов
-    if request.method == 'GET':
+    # можно всем
+    def get(self, request, format=None):
         products = filterProducts(OpticItem.objects.all().order_by('last_modified'), request)
         productsData = [getProductDataWithImage(OpticItemSerializer(product)) for product in products]
         return Response(productsData, status=status.HTTP_202_ACCEPTED)
     
+    
     # добавление продукта
-    elif request.method == 'POST':
+    # можно только если авторизован и модератор
+    @method_permission_classes((IsModerator,))
+    @swagger_auto_schema(request_body=OpticItemSerializer)
+    def post(self, request, format=None):
         serializer = OpticItemSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             postProductImage(request, serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
-@api_view(['Get', 'Post', 'Put', 'Delete'])
-def processOpticItem(request, pk, format=None):
+class OpticItem_View(APIView):
+    # authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     # получение продукта
-    if request.method == 'GET':
+    # можно всем
+    def get(self, request, pk, format=None):
         product = get_object_or_404(OpticItem, pk=pk)
-        if request.method == 'GET':
-            serializer = OpticItemSerializer(product)
-            return Response(getProductDataWithImage(serializer), status=status.HTTP_202_ACCEPTED)
+        serializer = OpticItemSerializer(product)
+        return Response(getProductDataWithImage(serializer), status=status.HTTP_202_ACCEPTED)
     
     # добавление продукта в заказ
-    elif request.method == 'POST': # add to order
-        userId = getUserId()
-        currentUser = User.objects.get(pk=userId)
+    # можно только если авторизован
+    def post(self, request, pk, format=None):
+        try:
+            ssid = request.COOKIES["session_id"]
+        except:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
+        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
         orderId = currentUser.active_order # неважно каким образом, но вот здесь нам надо получить либо id черновика, либо узнать что его нету
         if orderId == -1:   # если его нету
             order = {}      # то создаём черновик, заполняем нужные данные
-            order['user'] = userId
+            order['user'] = currentUser.pk
             order['moderator'] = random.choice(User.objects.filter(is_moderator=True)).pk
             orderSerializer = OpticOrderSerializer(data=order)
             if orderSerializer.is_valid():
@@ -94,7 +113,10 @@ def processOpticItem(request, pk, format=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     # изменение продукта
-    elif request.method == 'PUT':
+    # можно только если авторизован и модератор
+    @method_permission_classes((IsModerator,))
+    @swagger_auto_schema(request_body=OpticItemSerializer)
+    def put(self, request, pk, format=None):
         product = get_object_or_404(OpticItem, pk=pk)
         fields = request.data.keys()
         if 'pk' in fields or 'status' in fields or 'last_modified' in fields:
@@ -107,15 +129,12 @@ def processOpticItem(request, pk, format=None):
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    # логическое удаление/восстановление продуктаы
-    elif request.method == 'DELETE':
-        try: 
-            new_status = request.data['status']
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
+    # логическое удаление/восстановление продукта
+    # можно только если авторизован и модератор
+    @method_permission_classes((IsModerator,))
+    def delete(self, request, pk, format=None):
         product = get_object_or_404(OpticItem, pk=pk)
-        product.status = new_status
+        product.status = 'N' if product.status == 'A' else 'A'
         product.save()
         serializer = OpticItemSerializer(product)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
