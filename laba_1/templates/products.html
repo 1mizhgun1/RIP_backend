@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Список заказов{% endblock %}
+
+{% block head %}
+<div class="head">
+    <div class="head-wrap">
+        <a href="{% url 'base_url' %}" class="head-title">SuperView</a>
+        <a href="{% url 'base_url' %}" class="head-subtitle">Интернет-магазин оптики</a>
+    </div>
+    <div class="head-bar">
+        {% for type in data.types %}
+            {% if type.active %}
+                <a href="{% url 'type_url' type.engName %}" class="head-bar-button-{{ type.id }}-active">{{ type.name }}</a>
+            {% else %}
+                <a href="{% url 'type_url' type.engName %}" class="head-bar-button-{{ type.id }}">{{ type.name }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+    <div id="filter">
+        <h4 id="filter-title">Фильтр</h4>
+        <h4 id="filter-text">Подбор по параметрам</h4>
+        <div id="filter-price">
+            <h4 id="filter-price-text">Розничная цена</h4>
+            <form action="filter" method="get" class="filter-price-form" enctype="text/plain">
+                <h4 id="filter-price-text-1">от</h4>
+                <h4 id="filter-price-text-2">до</h4>
+                {% if data.priceMin == data.priceMinAbsolute %}
+                    <input id="filter-input-price-min" name="price_min" type="text" size="7" placeholder="{{ data.priceMin }}">
+                {% else %}
+                    <input id="filter-input-price-min" name="price_min" type="text" size="7" value="{{ data.priceMin }}">
+                {% endif %}
+                {% if data.priceMax == data.priceMaxAbsolute %}
+                    <input id="filter-input-price-max" name="price_max" type="text" size="7" placeholder="{{ data.priceMax }}">
+                {% else %}
+                    <input id="filter-input-price-max" name="price_max" type="text" size="7" value="{{ data.priceMax }}">
+                {% endif %}
+                <input id="filter-price-submit" type="submit" value="применить">
+            </form>
+        </div>
+    </div>
+    <table id="box">
+        {% for row in data.products %}
+        <tr id="box-row-{{ row.id }}">
+            {% for product in row.row %}
+            <td id="box-item-{{ product.id }}">
+                <div class="card">
+                    <div class="card-image-wrap"><a href="{% url 'product_url' product.id %}"><img src="{% static product.image %}" alt="картинка" class="card-image"></a></div>
+                    <div class="card-title-wrap"><a href="{% url 'product_url' product.id %}" class="card-title">{{ product.title }}</a></div>
+                    <h4 class="card-price">{{ product.price }} ₽</h4>
+                    {% if product.status == 'в наличии' %}
+                        <h4 class="card-status-green">{{ product.status }}</h4>
+                    {% elif product.status == 'раскупили' %}
+                        <h4 class="card-status-red">{{ product.status }}</h4>
+                    {% endif %}
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
