@@ -1,4 +1,17 @@
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
+
+
+class NewUserManager(UserManager):
+    def create_user(self, username, password=None, **extra_fields):
+        if not username:
+            raise ValueError('User must have a username')
+        
+        user: User = self.model(username=username, **extra_fields) 
+        user.set_password(password)
+        user.save(using=self.db)
+        return user
+
 
 class OpticItem(models.Model):
     title = models.CharField(max_length=100, verbose_name="Название")
@@ -16,13 +29,20 @@ class OpticItem(models.Model):
     param_brand = models.CharField(max_length=50, verbose_name="Бренд")
     last_modified = models.DateTimeField(auto_now=True, verbose_name="Последнее изменение", null=True, blank=True)
 
-class User(models.Model):
-    is_moderator = models.BooleanField(verbose_name="Модератор?")
-    name = models.CharField(max_length=50, verbose_name="Имя")
-    login = models.CharField(max_length=50, verbose_name="Логин")
-    password = models.CharField(max_length=50, verbose_name="Пароль")
+
+class User(AbstractBaseUser, PermissionsMixin):
+    objects = NewUserManager()
+
+    username = models.CharField(max_length=32, unique=True, verbose_name="Имя пользователя")
+    password = models.CharField(max_length=256, verbose_name="Пароль") 
+    is_moderator = models.BooleanField(verbose_name="Модератор?", default=False)
+    is_staff = models.BooleanField(verbose_name="Можно в админку?", default=False)
+    is_superuser = models.BooleanField(verbose_name="Суперсус?", default=False)
     active_order = models.IntegerField(verbose_name="Активный заказ", default=-1)
+
+    USERNAME_FIELD = 'username'
     
+
 class OpticOrder(models.Model):
     created = models.DateTimeField(auto_now=True, verbose_name="Создание")
     send = models.DateTimeField(verbose_name="Отправка", null=True, blank=True)
@@ -41,6 +61,7 @@ class OpticOrder(models.Model):
 # D - created, send
 # A - created, send, closed
 # W - created, send, closed
+
 
 class OrdersItems(models.Model):
     product_cnt = models.IntegerField(verbose_name="Количество данного товара в данном заказе")

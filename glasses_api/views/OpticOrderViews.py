@@ -1,23 +1,29 @@
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view
-
-from ..models import OpticItem, OpticOrder, OrdersItems, User
-from ..serializers import OpticItemSerializer, OpticOrderSerializer, PositionSerializer, ProductInOrderSerializer
-from ..filters import filterOrders
-
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 
+import redis
+from BACKEND.settings import REDIS_HOST, REDIS_PORT
+
+from ..models import *
+from ..serializers import *
+from ..filters import filterOrders
+from ..permissions import *
 from glasses_api.minio.MinioClass import MinioClass
 
 from datetime import datetime
 
-from .UserData import getUserId
+
+session_storage = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
 
 
 # проверяет, можно ли поменять статус заказа с old на new в зависимости от привилегий пользователя
 def checkStatusUpdate(old, new, isModer):
     return ((not isModer) and (new in ['P', 'D']) and (old == 'I')) or (isModer and (new in ['A', 'W']) and (old == 'P'))
+
 
 # добавляет картинку к позиции заказа
 def getProductInOrderWithImage(serializer: ProductInOrderSerializer, pk: int, file_extension: str):
@@ -25,6 +31,7 @@ def getProductInOrderWithImage(serializer: ProductInOrderSerializer, pk: int, fi
     productData = serializer.data
     productData['image'] = minio.getImage('products', pk, file_extension)
     return productData
+
 
 # добавляет данные продукта ко всем позициям заказа
 def getOrderPositionsWithProductData(serializer: PositionSerializer):
@@ -37,19 +44,35 @@ def getOrderPositionsWithProductData(serializer: PositionSerializer):
     return positions
 
 
-@api_view(['Get', 'Put', 'Delete'])
-def processOpticOrderList(request, format=None):
+class OpticOrderList_View(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     # получение списка заказов
-    if request.method == 'GET':
-        orders = filterOrders(OpticOrder.objects.all(), request)
+    # можно только если авторизован
+    def get(self, request, format=None):
+        try:
+            ssid = request.COOKIES["session_id"]
+        except:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
+        if currentUser.is_moderator:
+            orders = filterOrders(OpticOrder.objects.all(), request)
+        else:
+            orders = filterOrders(OpticOrder.objects.filter(user=currentUser), request)
         serializer = OpticOrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
     
     # отправка заказа пользователем
-    elif request.method == 'PUT':
-        userId = getUserId()
-        currentUser = User.objects.get(pk=userId)
+    # можно только если авторизован
+    @swagger_auto_schema(request_body=OpticOrderSerializer)
+    def put(self, request, format=None):
+        try:
+            ssid = request.COOKIES["session_id"]
+        except:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
 
         order = get_object_or_404(OpticOrder, pk=currentUser.active_order)
         new_status = "P"
@@ -64,9 +87,14 @@ def processOpticOrderList(request, format=None):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     
     # удаление заказа пользователем
-    elif request.method == 'DELETE':
-        userId = getUserId()
-        currentUser = User.objects.get(pk=userId)
+    # можно только если авторизован
+    def delete(self, request, format=None):
+        try:
+            ssid = request.COOKIES["session_id"]
+        except:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
         
         order = get_object_or_404(OpticOrder, pk=currentUser.active_order)
         if checkStatusUpdate(order.status, "D", isModer=False):
@@ -75,36 +103,41 @@ def processOpticOrderList(request, format=None):
             order.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    
 
-@api_view(['Get', 'Put', 'Delete'])
-def processOpticOrder(request, pk, format=None):
+class OpticOrder_View(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     # получение заказа
-    if request.method == 'GET':
-        order = get_object_or_404(OpticOrder, pk=pk)
-        orderSerializer = OpticOrderSerializer(order)
+    # можно получить свой заказ если авторизован
+    # если авторизован и модератор, то можно получить любой заказ
+    def get(self, request, pk, format=None):
+        try:
+            ssid = request.COOKIES["session_id"]
+        except:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
-        positions = OrdersItems.objects.filter(order=pk)
-        positionsSerializer = PositionSerializer(positions, many=True)
+        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
+        order_keys = OpticOrder.objects.filter(user=currentUser).values_list('pk', flat=True)
+        if (pk in order_keys) or currentUser.is_moderator:
+            order = get_object_or_404(OpticOrder, pk=pk)
+            orderSerializer = OpticOrderSerializer(order)
 
-        response = orderSerializer.data
-        response['positions'] = getOrderPositionsWithProductData(positionsSerializer)
+            positions = OrdersItems.objects.filter(order=pk)
+            positionsSerializer = PositionSerializer(positions, many=True)
 
-        return Response(response, status=status.HTTP_202_ACCEPTED)
-    
-    # изменение заказа
-    elif request.method == 'PUT':
-        order = get_object_or_404(OpticOrder, pk=pk)
-        serializer = OpticOrderSerializer(order, data=request.data)
-        if 'status' in request.data.keys():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            response = orderSerializer.data
+            response['positions'] = getOrderPositionsWithProductData(positionsSerializer)
+
+            return Response(response, status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
     
     # перевод заказа модератором на статус A или W
-    elif request.method == 'DELETE':
+    # можно только если авторизован и модератор
+    @method_permission_classes((IsModerator,))
+    @swagger_auto_schema(request_body=OpticOrderSerializer)
+    def put(self, request, pk, format=None):
         order = get_object_or_404(OpticOrder, pk=pk)
         try: 
             new_status = request.data['status']
