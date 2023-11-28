@@ -10,15 +10,6 @@
         <a href="{% url 'base_url' %}" class="head-title">SuperView</a>
         <a href="{% url 'base_url' %}" class="head-subtitle">Интернет-магазин оптики</a>
     </div>
-    <div class="head-bar">
-        {% for type in data.types %}
-            {% if type.active %}
-                <a href="{% url 'type_url' type.engName %}" class="head-bar-button-{{ type.id }}-active">{{ type.name }}</a>
-            {% else %}
-                <a href="{% url 'type_url' type.engName %}" class="head-bar-button-{{ type.id }}">{{ type.name }}</a>
-            {% endif %}
-        {% endfor %}
-    </div>
 </div>
 {% endblock %}
 
@@ -26,7 +17,7 @@
     <div class="product">
         <div class="product-info">
             <h4 class="product-title">{{ data.product.title }}</h4>
-            <div class="product-image-wrap"><img src="{% static data.product.image %}" alt="картинка" class="product-image"></div>
+            <div class="product-image-wrap"><img src="{% static data.product.link %}" alt="картинка" class="product-image"></div>
             <input type="radio" name="radio" id="product-params" checked>
             <input type="radio" name="radio" id="product-reviews">
             <div class="product-bar">
@@ -51,16 +42,20 @@
             </div>
         </div>
         <div class="product-price-card">
-            {% if data.product.status == 'в наличии' %}
-                <h4 class="product-status-green">{{ data.product.status }}</h4>
-            {% elif data.product.status == 'раскупили' %}
-                <h4 class="product-status-red">{{ data.product.status }}</h4>
+            {% if data.product.cnt > 0 %}
+                <h4 class="product-status-green">в наличии</h4>
+            {% elif data.product.cnt == 0 %}
+                <h4 class="product-status-red">раскупили</h4>
             {% endif %}
             <div class="product-price-block">
                 <h4 class="product-price-text">Цена:</h4>
                 <h4 class="product-price">{{ data.product.price }} ₽</h4>
             </div>
-            <button class="product-to-cart" type="button">В корзину</button>
+            {% if data.product.cnt > 0 %}
+                <button class="product-to-cart-green" type="button">В корзину</button>
+            {% elif data.product.cnt == 0 %}
+                <span class="product-to-cart-grey">В корзину</span>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
