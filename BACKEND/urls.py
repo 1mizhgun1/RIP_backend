@@ -10,7 +10,6 @@ from glasses_api.views.OpticItemViews import *
 from glasses_api.views.OpticOrderViews import *
 from glasses_api.views.OrdersItemsViews import *
 from glasses_api.views.PricesViews import *
-from glasses_api.views.TypeViews import *
 
 from glasses_api.views.AuthViews import *
 
@@ -50,6 +49,5 @@ urlpatterns = [
 
     path(r'links/', Link_View.as_view(), name='link-action'),   # PUT (product, cnt), DELETE (product)
 
-    path(r'prices/', Prices_View.as_view(), name='get-prices'), # GET
-    path(r'types/', TypeList_View.as_view(), name='get-types'), # GET
+    path(r'prices/', Prices_View.as_view(), name='get-prices'), # GETET
 ]

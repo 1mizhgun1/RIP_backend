@@ -3,14 +3,18 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserM
 
 
 class NewUserManager(UserManager):
-    def create_user(self, username, password=None, **extra_fields):
-        if not username:
-            raise ValueError('User must have a username')
-        
-        user: User = self.model(username=username, **extra_fields) 
+    def create_user(self, username, password, **extra_fields):
+        user: User = self.model(username=username, **extra_fields)
         user.set_password(password)
-        user.save(using=self.db)
+        user.save()
         return user
+
+    def create_superuser(self, username, password, **extra_fields):
+        extra_fields.setdefault('is_moderator', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(username, password, **extra_fields)
 
 
 class OpticItem(models.Model):
@@ -28,6 +32,9 @@ class OpticItem(models.Model):
     param_time = models.CharField(max_length=50, verbose_name="Частота замены", null=True, blank=True)
     param_brand = models.CharField(max_length=50, verbose_name="Бренд")
     last_modified = models.DateTimeField(auto_now=True, verbose_name="Последнее изменение", null=True, blank=True)
+    
+    def __str__(self):
+        return self.title
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -38,9 +45,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_moderator = models.BooleanField(verbose_name="Модератор?", default=False)
     is_staff = models.BooleanField(verbose_name="Можно в админку?", default=False)
     is_superuser = models.BooleanField(verbose_name="Суперсус?", default=False)
-    active_order = models.IntegerField(verbose_name="Активный заказ", default=-1)
+    is_active = models.BooleanField(verbose_name="Активный?", default=True)
 
     USERNAME_FIELD = 'username'
+    
+    def __str__(self):
+        return self.username
     
 
 class OpticOrder(models.Model):

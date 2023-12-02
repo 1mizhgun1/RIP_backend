@@ -18,14 +18,20 @@ class OpticItemSerializer(ModelSerializer):
         fields = ["pk","title","file_extension","price","cnt","status","type","param_sex","param_material","param_type","param_color","param_form","param_time","param_brand","last_modified"]
 
 
-class UserSerializer(ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     is_staff = serializers.BooleanField(default=False, required=False)
     is_moderator = serializers.BooleanField(default=False, required=False)
     is_superuser = serializers.BooleanField(default=False, required=False)
-
+    is_active = serializers.BooleanField(default=True, required=False)
+    
     class Meta:
         model = User
-        fields = ["pk","is_moderator","is_staff","is_superuser","username","password","active_order"]
+        fields = ["pk","is_moderator","is_staff","is_superuser","is_active","username","password"]
+        
+        
+class UserLoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
 
 
 class OpticOrderSerializer(ModelSerializer):

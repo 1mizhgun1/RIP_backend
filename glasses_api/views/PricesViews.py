@@ -10,8 +10,6 @@ from django.db.models import Min, Max
 
 
 class Prices_View(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
     def get(self, request, format=None):
         orders = filterProducts(OpticItem.objects.all(), request)
         price_min = orders.aggregate(Min('price'))['price__min']
