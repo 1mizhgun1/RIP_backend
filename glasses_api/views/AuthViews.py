@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes, authentication_classes, api_view
 from drf_yasg.utils import swagger_auto_schema
 
+import json
 import uuid
 import redis
 from BACKEND.settings import REDIS_HOST, REDIS_PORT
@@ -69,12 +70,20 @@ def login_view(request):
         random_key = str(uuid.uuid4())
         session_storage.set(random_key, username)
 
-        response = HttpResponse("{'status': 'ok'}")
+        response = HttpResponse(json.dumps({
+            'status': 'success',
+            'pk': user.pk,
+            'username': user.username,
+            'is_moderator': user.is_moderator,
+            'active_order': user.active_order,
+            'is_authenticated': user.is_authenticated,
+        }))
         response.set_cookie("session_id", random_key)
 
         return response
     else:
         return HttpResponse("{'status': 'error', 'error': 'login failed'}")
+
 
 @permission_classes([AllowAny])
 @authentication_classes([])
@@ -93,3 +102,14 @@ def logout_view(request):
     response = HttpResponse("{'status': 'success'}")
     response.delete_cookie("session_id")
     return response
+
+
+@api_view(['Post'])
+@permission_classes([AllowAny])
+def check(request):
+    session_id = request.headers.get("authorization")
+    if (session_storage.get(session_id)):
+        user = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_403_FORBIDDEN)

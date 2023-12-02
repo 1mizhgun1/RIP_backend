@@ -40,6 +40,7 @@ urlpatterns = [
 
     path('accounts/login/', login_view, name='login'),
     path('accounts/logout/', logout_view, name='logout'),
+    path('accounts/check/', check, name='check'),
 
     path(r'products/', OpticItemList_View.as_view(), name='products-action'),       # GET, POST (title, file_extension, price, cnt, type, param_brand, image)
     path(r'products/<int:pk>/', OpticItem_View.as_view(), name='product-action'),   # GET, POST, PUT(title, file_extension, price, cnt, type, param_brand, image, additional params), DELETE
