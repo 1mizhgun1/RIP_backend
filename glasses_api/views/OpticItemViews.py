@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.decorators import permission_classes
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 
@@ -10,8 +11,9 @@ from BACKEND.settings import REDIS_HOST, REDIS_PORT
 
 from ..models import *
 from ..serializers import *
-from ..filters import filterProducts
+from ..filters import *
 from ..permissions import *
+from ..services import *
 from glasses_api.minio.MinioClass import MinioClass
 
 import random
@@ -42,14 +44,17 @@ def putProductImage(request, serializer: OpticOrderSerializer):
 
 
 class OpticItemList_View(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
     # получение списка продуктов
     # можно всем
     def get(self, request, format=None):
         products = filterProducts(OpticItem.objects.all().order_by('last_modified'), request)
-        productsData = [getProductDataWithImage(OpticItemSerializer(product)) for product in products]
-        return Response(productsData, status=status.HTTP_202_ACCEPTED)
+
+        data = {
+            "order": getOrderID(request),
+            "products": [getProductDataWithImage(OpticItemSerializer(product)) for product in products]
+        }
+
+        return Response(data, status=status.HTTP_202_ACCEPTED)
     
     
     # добавление продукта
@@ -66,9 +71,6 @@ class OpticItemList_View(APIView):
         
 
 class OpticItem_View(APIView):
-    # authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
     # получение продукта
     # можно всем
     def get(self, request, pk, format=None):
@@ -79,32 +81,30 @@ class OpticItem_View(APIView):
     # добавление продукта в заказ
     # можно только если авторизован
     def post(self, request, pk, format=None):
-        try:
-            ssid = request.COOKIES["session_id"]
-        except:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         
-        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
-        orderId = currentUser.active_order # неважно каким образом, но вот здесь нам надо получить либо id черновика, либо узнать что его нету
-        if orderId == -1:   # если его нету
+        currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
+        orderID = getOrderID(request)
+        if orderID == -1:   # если его нету
             order = {}      # то создаём черновик, заполняем нужные данные
             order['user'] = currentUser.pk
             order['moderator'] = random.choice(User.objects.filter(is_moderator=True)).pk
             orderSerializer = OpticOrderSerializer(data=order)
             if orderSerializer.is_valid():
                 orderSerializer.save()  # сохраняем сериализер
-                orderId = orderSerializer.data['pk']
-                currentUser.active_order = orderId
+                orderID = orderSerializer.data['pk']
                 currentUser.save()
             else:
                 return Response(orderSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         # теперь у нас точно есть черновик, поэтому мы создаём связь м-м (не уверен что следующие две строки вообще нужны)    
-        if OpticOrder.objects.get(pk=orderId).status != 'I' or len(OrdersItems.objects.filter(product=pk).filter(order=orderId)) != 0:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if OpticOrder.objects.get(pk=orderID).status != 'I' or len(OrdersItems.objects.filter(product=pk).filter(order=orderID)) != 0:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         link = {}
         link['product'] = pk
-        link['order'] = orderId
+        link['order'] = orderID
         link['product_cnt'] = 1
         serializer = OrdersItemsSerializer(data=link)
         if serializer.is_valid():
@@ -114,9 +114,16 @@ class OpticItem_View(APIView):
     
     # изменение продукта
     # можно только если авторизован и модератор
-    @method_permission_classes((IsModerator,))
     @swagger_auto_schema(request_body=OpticItemSerializer)
     def put(self, request, pk, format=None):
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+        currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
+        if not currentUser.is_moderator:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
         product = get_object_or_404(OpticItem, pk=pk)
         fields = request.data.keys()
         if 'pk' in fields or 'status' in fields or 'last_modified' in fields:
@@ -131,8 +138,15 @@ class OpticItem_View(APIView):
     
     # логическое удаление/восстановление продукта
     # можно только если авторизован и модератор
-    @method_permission_classes((IsModerator,))
     def delete(self, request, pk, format=None):
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+        currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
+        if not currentUser.is_moderator:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
         product = get_object_or_404(OpticItem, pk=pk)
         product.status = 'N' if product.status == 'A' else 'A'
         product.save()

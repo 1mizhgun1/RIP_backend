@@ -10,8 +10,9 @@ from BACKEND.settings import REDIS_HOST, REDIS_PORT
 
 from ..models import *
 from ..serializers import *
-from ..filters import filterOrders
+from ..filters import *
 from ..permissions import *
+from ..services import *
 from glasses_api.minio.MinioClass import MinioClass
 
 from datetime import datetime
@@ -45,17 +46,14 @@ def getOrderPositionsWithProductData(serializer: PositionSerializer):
 
 
 class OpticOrderList_View(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
     # получение списка заказов
     # можно только если авторизован
     def get(self, request, format=None):
-        try:
-            ssid = request.COOKIES["session_id"]
-        except:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
+        currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
         if currentUser.is_moderator:
             orders = filterOrders(OpticOrder.objects.all(), request)
         else:
@@ -67,18 +65,13 @@ class OpticOrderList_View(APIView):
     # можно только если авторизован
     @swagger_auto_schema(request_body=OpticOrderSerializer)
     def put(self, request, format=None):
-        try:
-            ssid = request.COOKIES["session_id"]
-        except:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
-
-        order = get_object_or_404(OpticOrder, pk=currentUser.active_order)
+        order = get_object_or_404(OpticOrder, pk=getOrderID(request))
         new_status = "P"
         if checkStatusUpdate(order.status, new_status, isModer=False):
-            currentUser.active_order = -1
-            currentUser.save()
             order.status = new_status
             order.send = datetime.now()
             order.save()
@@ -89,35 +82,27 @@ class OpticOrderList_View(APIView):
     # удаление заказа пользователем
     # можно только если авторизован
     def delete(self, request, format=None):
-        try:
-            ssid = request.COOKIES["session_id"]
-        except:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         
-        order = get_object_or_404(OpticOrder, pk=currentUser.active_order)
+        order = get_object_or_404(OpticOrder, pk=getOrderID(request))
         if checkStatusUpdate(order.status, "D", isModer=False):
-            currentUser.active_order = -1
-            currentUser.save()
             order.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
     
 
 class OpticOrder_View(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
     # получение заказа
     # можно получить свой заказ если авторизован
     # если авторизован и модератор, то можно получить любой заказ
     def get(self, request, pk, format=None):
-        try:
-            ssid = request.COOKIES["session_id"]
-        except:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
+        currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
         order_keys = OpticOrder.objects.filter(user=currentUser).values_list('pk', flat=True)
         if (pk in order_keys) or currentUser.is_moderator:
             order = get_object_or_404(OpticOrder, pk=pk)
@@ -135,14 +120,22 @@ class OpticOrder_View(APIView):
     
     # перевод заказа модератором на статус A или W
     # можно только если авторизован и модератор
-    @method_permission_classes((IsModerator,))
     @swagger_auto_schema(request_body=OpticOrderSerializer)
     def put(self, request, pk, format=None):
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+        currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
+        if not currentUser.is_moderator:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
         order = get_object_or_404(OpticOrder, pk=pk)
         try: 
             new_status = request.data['status']
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
         if checkStatusUpdate(order.status, new_status, isModer=True):
             order.status = new_status
             order.closed = datetime.now()

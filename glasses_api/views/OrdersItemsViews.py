@@ -9,24 +9,20 @@ from BACKEND.settings import REDIS_HOST, REDIS_PORT
 
 from ..models import *
 from ..serializers import *
+from ..services import *
 
 
 session_storage = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
 
 
 class Link_View(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
     # изменение количества продукта в заказе
     # можно только если авторизован
     @swagger_auto_schema(request_body=OrdersItemsSerializer)
     def put(self, request, format=None):
-        try:
-            ssid = request.COOKIES["session_id"]
-        except:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         try: 
             cnt = request.data['product_cnt']
@@ -36,7 +32,7 @@ class Link_View(APIView):
 
         if OpticItem.objects.get(pk=productId).cnt < cnt:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        links = OrdersItems.objects.filter(product=productId).filter(order=User.objects.get(pk=currentUser.pk).active_order)
+        links = OrdersItems.objects.filter(product=productId).filter(order_id=getOrderID(request))
         if len(links) > 0:
             links[0].product_cnt = cnt
             links[0].save()
@@ -47,24 +43,20 @@ class Link_View(APIView):
     # можно только если авторизован
     @swagger_auto_schema(request_body=OrdersItemsSerializer)
     def delete(self, request, format=None):
-        try:
-            ssid = request.COOKIES["session_id"]
-        except:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        currentUser = User.objects.get(username=session_storage.get(ssid).decode('utf-8'))
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         try: 
             productId = request.data['product']
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        links = OrdersItems.objects.filter(product=productId).filter(order=currentUser.active_order)
+        orderID = getOrderID(request)
+        links = OrdersItems.objects.filter(product=productId).filter(order_id=orderID)
         if len(links) > 0:
             links[0].delete()
-            if len(OrdersItems.objects.filter(order=currentUser.active_order)) == 0:
-                OpticOrder.objects.get(pk=currentUser.active_order).delete()
-                currentUser.active_order = -1
-                currentUser.save()
+            if len(OrdersItems.objects.filter(order_id=orderID)) == 0:
+                OpticOrder.objects.get(pk=orderID).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
