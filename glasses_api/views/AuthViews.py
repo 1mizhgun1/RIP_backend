@@ -14,7 +14,7 @@ import uuid
 from ..serializers import *
 from rest_framework.decorators import api_view
 from glasses_api.permissions import *
-from ..services import get_session
+from ..services import *
 
 session_storage = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
 
@@ -42,7 +42,7 @@ class UserViewSet(ModelViewSet):
         Если пользователя c указанным в request username ещё нет, в БД будет добавлен новый пользователь.
         """
         if self.model_class.objects.filter(username=request.data['username']).exists():
-            return Response({'status': 'Exist'}, status=400)
+            return Response({'status': 'Exist'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             self.model_class.objects.create_user(username=serializer.data['username'],
@@ -57,9 +57,11 @@ class UserViewSet(ModelViewSet):
 @api_view(['Post'])
 @permission_classes([IsAuthenticated])
 def check(request):
-    session_id = request.headers.get("authorization")
+    session_id = get_session(request)
+    if session_id is None:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    if session_storage.get(session_id):
+    if session_id in session_storage:
         user = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
         serializer = UserSerializer(user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)

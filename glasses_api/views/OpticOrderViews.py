@@ -52,6 +52,10 @@ class OpticOrderList_View(APIView):
         session_id = get_session(request)
         if session_id is None:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+        username = session_storage.get(session_id)
+        if username is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
         if currentUser.is_moderator:
@@ -101,6 +105,10 @@ class OpticOrder_View(APIView):
         session_id = get_session(request)
         if session_id is None:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+        username = session_storage.get(session_id)
+        if username is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
         order_keys = OpticOrder.objects.filter(user=currentUser).values_list('pk', flat=True)
@@ -143,3 +151,29 @@ class OpticOrder_View(APIView):
             serializer = OpticOrderSerializer(order)
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+    
+class Cart_View(APIView):
+    def get(self, request, format=None):
+        session_id = get_session(request)
+        if session_id is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+        username = session_storage.get(session_id)
+        if username is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
+        orders = OpticOrder.objects.filter(user=currentUser).filter(status='I')
+        if orders.exists():
+            order = orders.first()
+            orderSerializer = OpticOrderSerializer(order)
+
+            positions = OrdersItems.objects.filter(order=order.pk)
+            positionsSerializer = PositionSerializer(positions, many=True)
+
+            response = orderSerializer.data
+            response['positions'] = getOrderPositionsWithProductData(positionsSerializer)
+
+            return Response(response, status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_404_NOT_FOUND)

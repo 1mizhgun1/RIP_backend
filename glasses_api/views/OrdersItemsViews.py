@@ -6,6 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 import redis
 from BACKEND.settings import REDIS_HOST, REDIS_PORT
+from glasses_api.views.OpticOrderViews import getOrderPositionsWithProductData
 
 from ..models import *
 from ..serializers import *
@@ -53,10 +54,20 @@ class Link_View(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         orderID = getOrderID(request)
-        links = OrdersItems.objects.filter(product=productId).filter(order_id=orderID)
+        links = OrdersItems.objects.filter(product_id=productId).filter(order_id=orderID)
         if len(links) > 0:
             links[0].delete()
             if len(OrdersItems.objects.filter(order_id=orderID)) == 0:
                 OpticOrder.objects.get(pk=orderID).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+                return Response("undefined", status=status.HTTP_202_ACCEPTED)
+            order = OpticOrder.objects.get(pk=orderID)
+            orderSerializer = OpticOrderSerializer(order)
+
+            positions = OrdersItems.objects.filter(order=order.pk)
+            positionsSerializer = PositionSerializer(positions, many=True)
+
+            response = orderSerializer.data
+            response['positions'] = getOrderPositionsWithProductData(positionsSerializer)
+
+            return Response(response, status=status.HTTP_202_ACCEPTED)
         return Response(status=status.HTTP_400_BAD_REQUEST)

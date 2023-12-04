@@ -18,7 +18,18 @@ def getOrderID(request):
     if session_id is None:
         return -1
 
+    username = session_storage.get(session_id)
+    if username is None:
+        return -1
+
     user = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
+    orders = OpticOrder.objects.filter(user=user).filter(status='I')
+    if orders.exists():
+        return orders.first().pk
+    return -1
+
+
+def getCartID(user: User):
     orders = OpticOrder.objects.filter(user=user).filter(status='I')
     if orders.exists():
         return orders.first().pk

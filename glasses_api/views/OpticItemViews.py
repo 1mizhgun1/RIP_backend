@@ -8,6 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 import redis
 from BACKEND.settings import REDIS_HOST, REDIS_PORT
+from glasses_api.views.OpticOrderViews import getOrderPositionsWithProductData
 
 from ..models import *
 from ..serializers import *
@@ -85,6 +86,10 @@ class OpticItem_View(APIView):
         if session_id is None:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         
+        username = session_storage.get(session_id)
+        if username is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
         currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
         orderID = getOrderID(request)
         if orderID == -1:   # если его нету
@@ -102,15 +107,21 @@ class OpticItem_View(APIView):
         # теперь у нас точно есть черновик, поэтому мы создаём связь м-м (не уверен что следующие две строки вообще нужны)    
         if OpticOrder.objects.get(pk=orderID).status != 'I' or len(OrdersItems.objects.filter(product=pk).filter(order=orderID)) != 0:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        link = {}
-        link['product'] = pk
-        link['order'] = orderID
-        link['product_cnt'] = 1
-        serializer = OrdersItemsSerializer(data=link)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        OrdersItems.objects.create(
+            product_id=pk,
+            order_id=orderID,
+            product_cnt=1
+        )
+        
+        order = OpticOrder.objects.get(pk=orderID)
+        orderSerializer = OpticOrderSerializer(order)
+
+        positions = OrdersItems.objects.filter(order=order.pk)
+        positionsSerializer = PositionSerializer(positions, many=True)
+
+        response = orderSerializer.data
+        response['positions'] = getOrderPositionsWithProductData(positionsSerializer)
+        return Response(response, status=status.HTTP_202_ACCEPTED)
     
     # изменение продукта
     # можно только если авторизован и модератор
