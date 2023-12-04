@@ -69,4 +69,4 @@ class PositionSerializer(ModelSerializer):
 class ProductInOrderSerializer(ModelSerializer):
     class Meta:
         model = OpticItem
-        fields = ["title","price"]
+        fields = ["pk","title","price","cnt"]

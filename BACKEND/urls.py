@@ -46,6 +46,7 @@ urlpatterns = [
 
     path(r'orders/', OpticOrderList_View.as_view(), name='orders-action'),      # GET, PUT, DELETE
     path(r'orders/<int:pk>/', OpticOrder_View.as_view(), name='order-action'),  # GET, PUT (status)
+    path(r'orders/cart/', Cart_View.as_view(), name='cart'),                    # GET
 
     path(r'links/', Link_View.as_view(), name='link-action'),   # PUT (product, cnt), DELETE (product)
 
