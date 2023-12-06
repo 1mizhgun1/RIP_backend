@@ -94,8 +94,8 @@ class OpticItem_View(APIView):
         orderID = getOrderID(request)
         if orderID == -1:   # если его нету
             order = {}      # то создаём черновик, заполняем нужные данные
-            order['user'] = currentUser.pk
-            order['moderator'] = random.choice(User.objects.filter(is_moderator=True)).pk
+            order['user'] = currentUser.username
+            order['moderator'] = random.choice(User.objects.filter(is_moderator=True)).username
             orderSerializer = OpticOrderSerializer(data=order)
             if orderSerializer.is_valid():
                 orderSerializer.save()  # сохраняем сериализер

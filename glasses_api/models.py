@@ -40,7 +40,7 @@ class OpticItem(models.Model):
 class User(AbstractBaseUser, PermissionsMixin):
     objects = NewUserManager()
 
-    username = models.CharField(max_length=32, unique=True, verbose_name="Имя пользователя")
+    username = models.CharField(max_length=32, unique=True, verbose_name="Имя пользователя", primary_key=True)
     password = models.CharField(max_length=256, verbose_name="Пароль") 
     is_moderator = models.BooleanField(verbose_name="Модератор?", default=False)
     is_staff = models.BooleanField(verbose_name="Можно в админку?", default=False)
