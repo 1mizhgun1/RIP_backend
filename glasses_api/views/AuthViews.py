@@ -83,7 +83,6 @@ def login_view(request):
 
         data = {
             "session_id": random_key,
-            "user_id": user.pk,
             "username": user.username,
             "is_moderator": user.is_moderator
         }
