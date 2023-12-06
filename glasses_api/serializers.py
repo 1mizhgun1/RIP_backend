@@ -35,8 +35,8 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class OpticOrderSerializer(ModelSerializer):
-    # username = serializers.SerializerMethodField()
-    # modername = serializers.SerializerMethodField()
+    username = serializers.SerializerMethodField()
+    modername = serializers.SerializerMethodField()
     
     def get_fields(self):
         new_fields = OrderedDict()
@@ -45,16 +45,15 @@ class OpticOrderSerializer(ModelSerializer):
             new_fields[name] = field
         return new_fields
     
-    # def get_username(self, obj):
-    #     print(obj.__fields__)
-    #     return obj.user.username
+    def get_username(self, obj):
+        return obj.user.username
     
-    # def get_modername(self, obj):
-    #     return obj.moderator.username
+    def get_modername(self, obj):
+        return obj.moderator.username
 
     class Meta:
         model = OpticOrder
-        fields = ["pk","created","send","closed","status","user","moderator"]
+        fields = ["pk","created","send","closed","status","username","modername"]
 
 
 class OrdersItemsSerializer(ModelSerializer):
