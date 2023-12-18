@@ -93,16 +93,11 @@ class OpticItem_View(APIView):
         currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
         orderID = getOrderID(request)
         if orderID == -1:   # если его нету
-            order = {}      # то создаём черновик, заполняем нужные данные
-            order['user'] = currentUser.username
-            order['moderator'] = random.choice(User.objects.filter(is_moderator=True)).username
-            orderSerializer = OpticOrderSerializer(data=order)
-            if orderSerializer.is_valid():
-                orderSerializer.save()  # сохраняем сериализер
-                orderID = orderSerializer.data['pk']
-                currentUser.save()
-            else:
-                return Response(orderSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            order = OpticOrder.objects.create(
+                user=currentUser,
+                moderator=random.choice(User.objects.filter(is_moderator=True))
+            )
+            orderID = order.pk
             
         # теперь у нас точно есть черновик, поэтому мы создаём связь м-м (не уверен что следующие две строки вообще нужны)    
         if OpticOrder.objects.get(pk=orderID).status != 'I' or len(OrdersItems.objects.filter(product=pk).filter(order=orderID)) != 0:
