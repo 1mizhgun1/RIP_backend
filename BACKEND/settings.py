@@ -157,3 +157,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
+
+PAYMENT_PASSWORD = "bf438279f8hnc28497g8fhvbv3682739fhbvc2332f9ch2438bgnv0v348ng0fgg"

@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 
 import redis
-from BACKEND.settings import REDIS_HOST, REDIS_PORT
+from BACKEND.settings import REDIS_HOST, REDIS_PORT, PAYMENT_PASSWORD
 
 from ..models import *
 from ..serializers import *
@@ -188,6 +188,9 @@ class OpticOrderStatus_View(APIView):
     @swagger_auto_schema(request_body=OpticOrderSerializer)
     def put(self, request, pk, format=None):
         payment_status = request.data["status"]
+        password = request.data["password"]
+        if password != PAYMENT_PASSWORD:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         try:
             order = OpticOrder.objects.get(pk=pk)
             order.payment = payment_status
