@@ -1,7 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 
@@ -16,6 +15,7 @@ from ..services import *
 from glasses_api.minio.MinioClass import MinioClass
 
 from datetime import datetime
+import requests
 
 
 session_storage = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
@@ -76,6 +76,10 @@ class OpticOrderList_View(APIView):
         order = get_object_or_404(OpticOrder, pk=getOrderID(request))
         new_status = "P"
         if checkStatusUpdate(order.status, new_status, isModer=False):
+            url = "http://localhost:5000/pay/"
+            params = {"order_id": order.pk}
+            response = requests.post(url, json=params)
+            
             order.status = new_status
             order.send = datetime.now()
             order.save()
@@ -177,3 +181,17 @@ class Cart_View(APIView):
 
             return Response(response, status=status.HTTP_202_ACCEPTED)
         return Response(status=status.HTTP_404_NOT_FOUND)
+    
+class OpticOrderStatus_View(APIView):
+    # изменение статуса оплаты заказа
+    # вызывается асинхронным сервисом
+    @swagger_auto_schema(request_body=OpticOrderSerializer)
+    def put(self, request, pk, format=None):
+        payment_status = request.data["status"]
+        try:
+            order = OpticOrder.objects.get(pk=pk)
+            order.payment = payment_status
+            order.save()
+            return Response(status=status.HTTP_200_OK)
+        except OpticOrder.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)

@@ -53,7 +53,7 @@ class OpticOrderSerializer(ModelSerializer):
 
     class Meta:
         model = OpticOrder
-        fields = ["pk","created","send","closed","status","username","modername"]
+        fields = ["pk","created","send","closed","status","payment","username","modername"]
 
 
 class OrdersItemsSerializer(ModelSerializer):
