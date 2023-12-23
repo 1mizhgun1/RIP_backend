@@ -59,9 +59,9 @@ class OpticOrderList_View(APIView):
 
         currentUser = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
         if currentUser.is_moderator:
-            orders = filterOrders(OpticOrder.objects.all(), request)
+            orders = filterOrders(OpticOrder.objects.all(), request).order_by('-send')
         else:
-            orders = filterOrders(OpticOrder.objects.filter(user=currentUser), request)
+            orders = filterOrders(OpticOrder.objects.filter(user=currentUser), request).order_by('-send')
         serializer = OpticOrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
     
