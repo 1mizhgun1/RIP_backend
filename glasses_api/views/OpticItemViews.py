@@ -18,14 +18,15 @@ from ..services import *
 from glasses_api.minio.MinioClass import MinioClass
 
 import random
+import time
 
 
 session_storage = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
+minio = MinioClass()
 
 
 # добавляет к сериализеру продукта поле image
 def getProductDataWithImage(serializer: OpticOrderSerializer):
-    minio = MinioClass()
     productData = serializer.data
     productData['image'] = minio.getImage('products', serializer.data['pk'], serializer.data['file_extension'])
     return productData
@@ -33,13 +34,11 @@ def getProductDataWithImage(serializer: OpticOrderSerializer):
 
 # выгружает картинку в minio из request
 def postProductImage(request, serializer: OpticOrderSerializer):
-    minio = MinioClass()
     minio.addImage('products', serializer.data['pk'], request.data['image'], serializer.data['file_extension'])
 
 
 # изменяет картинку продукта в minio на переданную в request
 def putProductImage(request, serializer: OpticOrderSerializer):
-    minio = MinioClass()
     minio.removeImage('products', serializer.data['pk'], serializer.data['file_extension'])
     minio.addImage('products', serializer.data['pk'], request.data['image'], serializer.data['file_extension'])
 
@@ -48,7 +47,7 @@ class OpticItemList_View(APIView):
     # получение списка продуктов
     # можно всем
     def get(self, request, format=None):
-        products = filterProducts(OpticItem.objects.all().order_by('last_modified'), request)
+        products = filterProducts(OpticItem.objects.all().order_by('-last_modified'), request)
 
         data = {
             "order": getOrderID(request),
@@ -66,7 +65,8 @@ class OpticItemList_View(APIView):
         serializer = OpticItemSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            postProductImage(request, serializer)
+            if 'image' in request.data.keys() and request.data['image'] != "":
+                postProductImage(request, serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -107,16 +107,7 @@ class OpticItem_View(APIView):
             order_id=orderID,
             product_cnt=1
         )
-        
-        order = OpticOrder.objects.get(pk=orderID)
-        orderSerializer = OpticOrderSerializer(order)
-
-        positions = OrdersItems.objects.filter(order=order.pk)
-        positionsSerializer = PositionSerializer(positions, many=True)
-
-        response = orderSerializer.data
-        response['positions'] = getOrderPositionsWithProductData(positionsSerializer)
-        return Response(response, status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_202_ACCEPTED)
     
     # изменение продукта
     # можно только если авторизован и модератор
@@ -137,8 +128,10 @@ class OpticItem_View(APIView):
         serializer = OpticItemSerializer(product, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            if 'image' in fields:
+            if 'image' in fields and request.data['image'] != "":
+                print('ЩАС БУДЕМ МЕНЯТЬ')
                 putProductImage(request, serializer)
+                print('ПОМЕНЯЛИ')
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

@@ -12,9 +12,10 @@ session_storage = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
 class IsModerator(BasePermission):
     def has_permission(self, request, view):
         try:
-            ssid = request.COOKIES["session_id"]
+            ssid = request.COOKIES.get("session_id", None)
             if ssid is None:
-                ssid = request.headers.get("authorization")
+                ssid = request.headers.get("authorization", None)
+            print('ssid:', ssid)
             if ssid is None:
                 return False
         except:
