@@ -54,21 +54,6 @@ class UserViewSet(ModelViewSet):
         return Response({'status': 'Error', 'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['Post'])
-@permission_classes([IsAuthenticated])
-def check(request):
-    session_id = get_session(request)
-    if session_id is None:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-    if session_id in session_storage:
-        user = User.objects.get(username=session_storage.get(session_id).decode('utf-8'))
-        serializer = UserSerializer(user, many=False)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    return Response(status=status.HTTP_403_FORBIDDEN)
-
-
 @swagger_auto_schema(method='post', request_body=UserSerializer)
 @api_view(['Post'])
 @permission_classes([AllowAny])

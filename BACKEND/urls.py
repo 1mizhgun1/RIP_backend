@@ -39,14 +39,12 @@ urlpatterns = [
 
     path('accounts/login/', login_view, name='login'),
     path('accounts/logout/', logout_view, name='logout'),
-    path('accounts/check/', check, name='check'),
 
     path(r'products/', OpticItemList_View.as_view(), name='products-action'),       # GET, POST (title, file_extension, price, cnt, type, param_brand, image)
     path(r'products/<int:pk>/', OpticItem_View.as_view(), name='product-action'),   # GET, POST, PUT(title, file_extension, price, cnt, type, param_brand, image, additional params), DELETE
 
     path(r'orders/', OpticOrderList_View.as_view(), name='orders-action'),              # GET, PUT, DELETE
     path(r'orders/<int:pk>/', OpticOrder_View.as_view(), name='order-action'),          # GET, PUT (status)
-    path(r'orders/cart/', Cart_View.as_view(), name='cart'),                            # GET
     path(r'orders/<int:pk>/status/', OpticOrderStatus_View.as_view(), name='payment'),  # PUT
 
     path(r'links/', Link_View.as_view(), name='link-action'),   # PUT (product, cnt), DELETE (product)
