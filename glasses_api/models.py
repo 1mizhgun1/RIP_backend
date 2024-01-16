@@ -60,7 +60,7 @@ class OpticOrder(models.Model):
     status = models.CharField(max_length=1, verbose_name="Статус", default='I') # I - inputing, P - processing, D - deleted by user, A - success, W - fail
     payment = models.CharField(max_length=1, verbose_name="Статус оплаты", default='N') # N - non-payed, A - success, W - fail
     user = models.ForeignKey(User, on_delete = models.CASCADE, verbose_name="Пользователь", related_name="user")
-    moderator = models.ForeignKey(User, on_delete = models.CASCADE, verbose_name="Модератор", related_name="moderator")
+    moderator = models.ForeignKey(User, on_delete = models.CASCADE, verbose_name="Модератор", related_name="moderator", null=True, blank=True)
 
 # I --- P --- A
 #  \     \
