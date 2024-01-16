@@ -1,8 +1,8 @@
 <h1>Репозиторий фронтенда</h1>
-<a href="https://github.com/1mizhgun1/RIP_frontend/"><h4>https://github.com/1mizhgun1/RIP_frontend/</h4></a>
+<a href="https://github.com/1mizhgun1/RIP_frontend/">https://github.com/1mizhgun1/RIP_frontend/</a>
 
 <h1>Репозиторий нативного приложения</h1>
-<a href="https://github.com/1mizhgun1/RIP_native/"><h4>https://github.com/1mizhgun1/RIP_native/</h4></a>
+<a href="https://github.com/1mizhgun1/RIP_native/">https://github.com/1mizhgun1/RIP_native/</a>
 
 <h1>Репозиторий асинхронного сервиса оплаты</h1>
-<a href="https://github.com/1mizhgun1/RIP_payment/"><h4>https://github.com/1mizhgun1/RIP_payment/</h4></a>
+<a href="https://github.com/1mizhgun1/RIP_payment/">https://github.com/1mizhgun1/RIP_payment/</a>
