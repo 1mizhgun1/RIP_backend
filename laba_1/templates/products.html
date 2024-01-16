@@ -10,15 +10,6 @@
         <a href="{% url 'base_url' %}" class="head-title">SuperView</a>
         <a href="{% url 'base_url' %}" class="head-subtitle">Интернет-магазин оптики</a>
     </div>
-    <div class="head-bar">
-        {% for type in data.types %}
-            {% if type.active %}
-                <a href="{% url 'type_url' type.engName %}" class="head-bar-button-{{ type.id }}-active">{{ type.name }}</a>
-            {% else %}
-                <a href="{% url 'type_url' type.engName %}" class="head-bar-button-{{ type.id }}">{{ type.name }}</a>
-            {% endif %}
-        {% endfor %}
-    </div>
 </div>
 {% endblock %}
 
@@ -28,7 +19,7 @@
         <h4 id="filter-text">Подбор по параметрам</h4>
         <div id="filter-price">
             <h4 id="filter-price-text">Розничная цена</h4>
-            <form action="filter" method="get" class="filter-price-form">
+            <form method="get" class="filter-price-form">
                 <h4 id="filter-price-text-1">от</h4>
                 <h4 id="filter-price-text-2">до</h4>
                 {% if data.prices.priceMin == data.prices.priceMinAbsolute %}
@@ -48,8 +39,8 @@
     <div id="box">
     {% for product in data.products %}
         <div class="card">
-            <div class="card-image-wrap"><a href="{% url 'product_url' product.pk %}"><img src="data:image/jpeg;base64,{{ product.image }}" alt="картинка" class="card-image"></a></div>
-            <div class="card-title-wrap"><a href="{% url 'product_url' product.pk %}" class="card-title">{{ product.title }}</a></div>
+            <div class="card-image-wrap"><a href="{% url 'product_url' product.id %}"><img src="{% static 'images/' %}{{ product.image }}" alt="картинка" class="card-image"></a></div>
+            <div class="card-title-wrap"><a href="{% url 'product_url' product.id %}" class="card-title">{{ product.title }}</a></div>
             <h4 class="card-price">{{ product.price }} ₽</h4>
             {% if product.cnt != 0 %}
                 <h4 class="card-status-green">в наличии</h4>

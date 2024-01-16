@@ -10,15 +10,6 @@
         <a href="{% url 'base_url' %}" class="head-title">SuperView</a>
         <a href="{% url 'base_url' %}" class="head-subtitle">Интернет-магазин оптики</a>
     </div>
-    <div class="head-bar">
-        {% for type in data.types %}
-            {% if type.active %}
-                <a href="{% url 'type_url' type.engName %}" class="head-bar-button-{{ type.id }}-active">{{ type.name }}</a>
-            {% else %}
-                <a href="{% url 'type_url' type.engName %}" class="head-bar-button-{{ type.id }}">{{ type.name }}</a>
-            {% endif %}
-        {% endfor %}
-    </div>
 </div>
 {% endblock %}
 
@@ -26,7 +17,7 @@
     <div class="product">
         <div class="product-info">
             <h4 class="product-title">{{ data.product.title }}</h4>
-            <div class="product-image-wrap"><img src="data:image/jpeg;base64,{{ data.product.image }}" alt="картинка" class="product-image"></div>
+            <div class="product-image-wrap"><img src="{% static 'images/' %}{{ data.product.image }}" alt="картинка" class="product-image"></div>
             <input type="radio" name="radio" id="product-params" checked>
             <input type="radio" name="radio" id="product-reviews">
             <div class="product-bar">
